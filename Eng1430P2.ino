@@ -2,10 +2,12 @@
 
 void setup() {
   // put your setup code here, to run once:
-  Stepper::setup();
+  Serial.begin(9600);
+  Serial.println("in setup");
+  StepperManager::getInstance();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  Stepper::loop();
+  StepperManager::getInstance()->run();
 }
