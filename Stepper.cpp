@@ -1,144 +1,126 @@
 #include "Stepper.h"
 
-//Global variables
-Adafruit_MotorShield AFMSbot(0x61); // Rightmost jumper closed
-Adafruit_MotorShield AFMStop(0x60); // Default address, no jumpers
+//adafruit board stuff
+Adafruit_MotorShield AFMSbot(0x61);  // Rightmost jumper closed
+Adafruit_MotorShield AFMStop(0x60);  // Default address, no jumpers
 
-#define NUMBER_OF_STEP_PORTS 2//edit if more or less stepper ports are avalible
+//SET TO TRUE OR FALSE TO ACTIVATE MOTOR PORT
+#define MOTOR1_STATUS true
+#define MOTOR2_STATUS false
+#define MOTOR3_STATUS false
 
-//
-//
-//   STEPPER MOTORS STEP FUNCTION       STEPPER MOTORS STEP FUNCTION
-//
-//
+#define MOTOR1_STEPS_PER_REV 100
+#define MOTOR2_STEPS_PER_REV 200
+#define MOTOR3_STEPS_PER_REV 200
 
-//STEP TYPE CAN BE SINGLE, DOUBLE, INTERLEAVE and MICROSTEP
-#define MOTOR1_STEP_TYPE SINGLE
-#define MOTOR2_STEP_TYPE SINGLE
-//add more if needed
+//SINGLE, DOUBLE, INTERLEAVE or MICROSTEP
+#define MOTOR1_STYLE DOUBLE
+#define MOTOR2_STYLE SINGLE
+#define MOTOR3_STYLE SINGLE
 
 
-//forgive me
-namespace StepperSteps{
-  void mf0() {StepperManager::getMotor(1)->stepperMotor->onestep(FORWARD,  MOTOR1_STEP_TYPE);}
-  void mb0() {StepperManager::getMotor(1)->stepperMotor->onestep(BACKWARD, MOTOR1_STEP_TYPE);}
-  void mf1() {StepperManager::getMotor(2)->stepperMotor->onestep(FORWARD,  MOTOR2_STEP_TYPE);}
-  void mb1() {StepperManager::getMotor(2)->stepperMotor->onestep(BACKWARD, MOTOR2_STEP_TYPE);}
+//MOTOR STEP FUNCTIONS
+namespace StepperMotor {
+void mf0() {
+  StepperManager::motors[0]->onestep(FORWARD, MOTOR1_STYLE);
+}
+void mb0() {
+  StepperManager::motors[0]->onestep(BACKWARD, MOTOR1_STYLE);
+}
+void mf1() {
+  StepperManager::motors[1]->onestep(FORWARD, MOTOR2_STYLE);
+}
+void mb1() {
+  StepperManager::motors[1]->onestep(BACKWARD, MOTOR2_STYLE);
+}
+void mf2() {
+  StepperManager::motors[2]->onestep(FORWARD, MOTOR3_STYLE);
+}
+void mb2() {
+  StepperManager::motors[2]->onestep(BACKWARD, MOTOR3_STYLE);
+}
 }
 
-//
-//
-//    STEPPERMOTOR STRUCT      STEPPERMOTOR STRUCT     STEPPERMOTOR STRUCT      STEPPERMOTOR STRUCT
-//
-//
 
-StepperMotor::StepperMotor(uint8_t motorPort, uint8_t steps) {
-  // Connects stepper with # of steps per revolution, 360/steps=degree
-  // to the top shield
-  stepperMotor = AFMStop.getStepper(steps, motorPort);
-  this->motorPort=motorPort;
 
-  // Check if the motor is successfully initialized
-  if (stepperMotor) {
-    switch (motorPort) {
-      case 1:
-        stepperWrap = AccelStepper(AccelStepper::FUNCTION, StepperSteps::mf0, StepperSteps::mb0);
-        break;
-      case 2:
-        stepperWrap = AccelStepper(AccelStepper::FUNCTION, StepperSteps::mf1, StepperSteps::mb1);
-        break;
-      default:
-        Serial.println("Invalid motorPort!");
-    }
-  } else {
-    Serial.print("Error: Stepper motor ");
-    Serial.print(motorPort);
-    Serial.println(" failed to initialize!");
+//
+//    STEPPERMANAGER       STEPPERMANAGER       STEPPERMANAGER       STEPPERMANAGER
+//
+StepperManager* StepperManager::s_Instance = nullptr;
+
+Adafruit_StepperMotor* StepperManager::motors[3] = { nullptr };
+AccelStepper StepperManager::motorWraps[3];
+
+
+
+StepperManager::StepperManager() {
+  //TODO SEE IF MORE ADAFRUIT STUFF USES THIS AND IF SO CREATE ITS OWN BOARD SETUP
+  AFMSbot.begin();  // Start the bottom shield
+  AFMStop.begin();  // Start the top shield
+
+  if (MOTOR1_STATUS) {
+    motors[0] = AFMStop.getStepper(MOTOR1_STEPS_PER_REV, 1);
+    motorWraps[0] = AccelStepper(StepperMotor::mf0, StepperMotor::mb0);
+
+    motorWraps[0].setMaxSpeed(100.0);
+    motorWraps[0].setAcceleration(100.0);
+    motorWraps[0].moveTo(24);
+  }
+  if (MOTOR2_STATUS) {
+    motors[2] = AFMStop.getStepper(MOTOR1_STEPS_PER_REV, 2);
+    motorWraps[1] = AccelStepper(StepperMotor::mf1, StepperMotor::mb1);
+
+    motorWraps[1].setMaxSpeed(200.0);
+    motorWraps[1].setAcceleration(100.0);
+    motorWraps[1].moveTo(50000);
+  }
+  if (MOTOR3_STATUS) {
+    motors[2] = AFMStop.getStepper(MOTOR1_STEPS_PER_REV, 3);
+    motorWraps[2] = AccelStepper(StepperMotor::mf2, StepperMotor::mb2);
+
+    motorWraps[2].setMaxSpeed(300.0);
+    motorWraps[2].setAcceleration(100.0);
+    motorWraps[2].moveTo(1000000);
   }
 }
 
-StepperMotor::~StepperMotor(){
-  //We're assuming that adafruit handles the Adafruit_StepperMotor* since the example doesnt delete it
+StepperManager::~StepperManager() {
 }
 
-//
-//
-//     STEPPERMANAGER      STEPPERMANAGER      STEPPERMANAGER       STEPPERMANAGER
-//
-//
-
-//Static inits
-StepperManager* StepperManager::s_Instance=nullptr;
-
-StepperMotor* StepperManager::stepperMotors[NUMBER_OF_STEP_PORTS]={nullptr};
-uint8_t StepperManager::numOfMotors=0;
-
-
-
-StepperManager* StepperManager::getInstance(){
-  if(!s_Instance){
-    Serial.println("Creating new Stepper");
-    s_Instance=new StepperManager();
+StepperManager* StepperManager::getInstance() {
+  if (!s_Instance) {
+    s_Instance = new StepperManager();
   }
   return s_Instance;
 }
 
-void StepperManager::addMotor(uint8_t motorPort){
-  if(!stepperMotors[motorPort]){
-    stepperMotors[motorPort]=new StepperMotor(motorPort);
+void StepperManager::run() {
+
+  //MOTOR1 ACTIVITIES :D
+  if (MOTOR1_STATUS) {
+    if (motorWraps[0].distanceToGo() == 0) {
+      motorWraps[0].moveTo(-motorWraps[0].currentPosition());
+    }
   }
-}
 
-
-const StepperMotor* StepperManager::getMotor(uint8_t motorPort){
-  if(!stepperMotors[motorPort]){
-    Serial.print("Motor ");
-    Serial.print(motorPort);
-    Serial.println(" is not initialized");
+  //MOTOR2 ACTIVITIES :D
+  if (MOTOR2_STATUS) {
+    if (motorWraps[1].distanceToGo() == 0) {
+      motorWraps[1].moveTo(-motorWraps[1].currentPosition());
+    }
   }
-  return stepperMotors[motorPort];
-}
 
-StepperManager::StepperManager(){
-  /*
-  * used to fetch stepper class that manages all stepper motors inside of a stepper struct object
-  * 
-  */
+  //MOTOR3 ACTIVITIES :D
+  if (MOTOR3_STATUS) {
+    if (motorWraps[2].distanceToGo() == 0) {
+      motorWraps[2].moveTo(-motorWraps[2].currentPosition());
+    }
+  }
 
-  Serial.print("start of stepper init");
-
-  AFMSbot.begin(); // Start the bottom shield
-  AFMStop.begin(); // Start the top shield
-
-  //Motor Setup
-  //Add Motor to stepperMotors array
-  //Set Max speed and Acceleration
-  StepperManager::addMotor(1);
-
-  StepperManager::getMotor(1)->stepperWrap.setMaxSpeed(100.0);
-  StepperManager::getMotor(1)->stepperWrap.setAcceleration(100.0);
-  StepperManager::getMotor(1)->stepperWrap.moveTo(24);
-
-  Serial.println("end of stepper init");
-}
-
-StepperManager::~StepperManager(){
-  delete[] stepperMotors;
-}
-
-void StepperManager::run(){
-  Serial.print("INSIDE RUNN ");
-    // Change direction at the limits
-    // if (stepperMotors[0].stepperWrap.distanceToGo() == 0){
-	  //   stepperMotors[0].stepperWrap.moveTo(-stepperMotors[0].stepperWrap.currentPosition());
-    // }
-
-    // if (stepperMotors[1].stepperWrap.distanceToGo() == 0){
-	  //   stepperMotors[1].stepperWrap.moveTo(-stepperMotors[1].stepperWrap.currentPosition());
-    // }
-    // Serial.println(stepperMotors[0].stepperWrap.distanceToGo());
-
-    StepperManager::getMotor(1)->stepperWrap.run();
-    // stepperMotors[1].stepperWrap.run();
-    // Serial.println("After run function");
+  if(MOTOR1_STATUS)
+    motorWraps[0].run();
+  if(MOTOR2_STATUS)
+    motorWraps[1].run();
+  if(MOTOR3_STATUS)
+    motorWraps[2].run();
 }
