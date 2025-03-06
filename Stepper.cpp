@@ -46,6 +46,8 @@ void mb2() {
 //
 //    STEPPERMANAGER       STEPPERMANAGER       STEPPERMANAGER       STEPPERMANAGER
 //
+
+//static Inits
 StepperManager* StepperManager::s_Instance = nullptr;
 
 Adafruit_StepperMotor* StepperManager::motors[3] = { nullptr };
