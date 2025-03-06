@@ -8,6 +8,26 @@ Adafruit_MotorShield AFMStop(0x60); // Default address, no jumpers
 
 //
 //
+//   STEPPER MOTORS STEP FUNCTION       STEPPER MOTORS STEP FUNCTION
+//
+//
+
+//STEP TYPE CAN BE SINGLE, DOUBLE, INTERLEAVE and MICROSTEP
+#define MOTOR1_STEP_TYPE SINGLE
+#define MOTOR2_STEP_TYPE SINGLE
+//add more if needed
+
+
+//forgive me
+namespace StepperSteps{
+  void mf0() {StepperManager::getMotor(1)->stepperMotor->onestep(FORWARD,  MOTOR1_STEP_TYPE);}
+  void mb0() {StepperManager::getMotor(1)->stepperMotor->onestep(BACKWARD, MOTOR1_STEP_TYPE);}
+  void mf1() {StepperManager::getMotor(2)->stepperMotor->onestep(FORWARD,  MOTOR2_STEP_TYPE);}
+  void mb1() {StepperManager::getMotor(2)->stepperMotor->onestep(BACKWARD, MOTOR2_STEP_TYPE);}
+}
+
+//
+//
 //    STEPPERMOTOR STRUCT      STEPPERMOTOR STRUCT     STEPPERMOTOR STRUCT      STEPPERMOTOR STRUCT
 //
 //
@@ -20,9 +40,16 @@ StepperMotor::StepperMotor(uint8_t motorPort, uint8_t steps) {
 
   // Check if the motor is successfully initialized
   if (stepperMotor) {
-
-    stepperWrap = AccelStepper(stepperMotor->onestep(FORWARD, SINGLE), stepperMotor->onestep(BACKWARD, SINGLE));
-
+    switch (motorPort) {
+      case 1:
+        stepperWrap = AccelStepper(AccelStepper::FUNCTION, StepperSteps::mf0, StepperSteps::mb0);
+        break;
+      case 2:
+        stepperWrap = AccelStepper(AccelStepper::FUNCTION, StepperSteps::mf1, StepperSteps::mb1);
+        break;
+      default:
+        Serial.println("Invalid motorPort!");
+    }
   } else {
     Serial.print("Error: Stepper motor ");
     Serial.print(motorPort);
@@ -32,8 +59,6 @@ StepperMotor::StepperMotor(uint8_t motorPort, uint8_t steps) {
 
 StepperMotor::~StepperMotor(){
   //We're assuming that adafruit handles the Adafruit_StepperMotor* since the example doesnt delete it
-
-  // delete type;
 }
 
 //
@@ -59,15 +84,19 @@ StepperManager* StepperManager::getInstance(){
 }
 
 void StepperManager::addMotor(uint8_t motorPort){
-
+  if(!stepperMotors[motorPort]){
+    stepperMotors[motorPort]=new StepperMotor(motorPort);
+  }
 }
 
-StepperMotor* StepperManager::getMotor(uint8_t motorPort){
-  if(false){
 
-  }else{
-    return nullptr;
+const StepperMotor* StepperManager::getMotor(uint8_t motorPort){
+  if(!stepperMotors[motorPort]){
+    Serial.print("Motor ");
+    Serial.print(motorPort);
+    Serial.println(" is not initialized");
   }
+  return stepperMotors[motorPort];
 }
 
 StepperManager::StepperManager(){
@@ -78,20 +107,17 @@ StepperManager::StepperManager(){
 
   Serial.print("start of stepper init");
 
-  //Motor Setup
-  //Add Motor to stepperMotors array
-  //Set Max speed and Acceleration
-
   AFMSbot.begin(); // Start the bottom shield
   AFMStop.begin(); // Start the top shield
 
-  // stepperMotors[0].stepperWrap.setMaxSpeed(100.0);
-  // stepperMotors[0].stepperWrap.setAcceleration(100.0);
-  // stepperMotors[0].stepperWrap.moveTo(24);
+  //Motor Setup
+  //Add Motor to stepperMotors array
+  //Set Max speed and Acceleration
+  StepperManager::addMotor(1);
 
-  // stepperMotors[1].stepperWrap.setMaxSpeed(200.0);
-  // stepperMotors[1].stepperWrap.setAcceleration(100.0);
-  // stepperMotors[1].stepperWrap.moveTo(50000);
+  StepperManager::getMotor(1)->stepperWrap.setMaxSpeed(100.0);
+  StepperManager::getMotor(1)->stepperWrap.setAcceleration(100.0);
+  StepperManager::getMotor(1)->stepperWrap.moveTo(24);
 
   Serial.println("end of stepper init");
 }
@@ -112,7 +138,7 @@ void StepperManager::run(){
     // }
     // Serial.println(stepperMotors[0].stepperWrap.distanceToGo());
 
-    // stepperMotors[0].stepperWrap.run();
+    StepperManager::getMotor(1)->stepperWrap.run();
     // stepperMotors[1].stepperWrap.run();
     // Serial.println("After run function");
 }

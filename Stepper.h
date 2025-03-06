@@ -11,14 +11,6 @@
 extern Adafruit_MotorShield AFMSbot; // Rightmost jumper closed
 extern Adafruit_MotorShield AFMStop; // Default address, no jumpers
 
-// you can change these to DOUBLE or INTERLEAVE or MICROSTEP!
-// enum class StepperType{
-//   SINGLET=0,
-//   DOUBLET=1,
-//   INTERLEAVET=2,
-//   MICROSTEPT=3
-// };
-
 struct StepperMotor {
 public:
   virtual ~StepperMotor();
@@ -31,7 +23,6 @@ public:
   uint8_t motorPort;
 
   Adafruit_StepperMotor* stepperMotor; // The actual stepper motor
-  // StepperType* type;
   AccelStepper stepperWrap; // Wrapper for AccelStepper
 };
 
