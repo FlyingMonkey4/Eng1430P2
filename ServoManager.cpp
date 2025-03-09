@@ -65,7 +65,11 @@ void ServoMotor::run() {
   Serial.print(" speed=");
   Serial.print(speed);
   Serial.print(" maxSpeed=");
-  Serial.println(maxSpeed);
+  Serial.print(maxSpeed);
+  Serial.print(" abs(Speed)=");
+  Serial.print(abs(speed));
+  Serial.print(" deadzone=");
+  Serial.println(SERVO2_SPEED_DEADZONE);
 
 
   if (speed < maxSpeed * direction) {
