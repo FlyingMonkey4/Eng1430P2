@@ -23,8 +23,11 @@
 #define SERVO1_SPEED_DEADZONE 20
 #define SERVO2_SPEED_DEADZONE 20
 
-#define SERVO1_SPEED_TIME_PER_60DEG 0.18 // Time for 60° rotation (in seconds)
+#define SERVO1_SPEED_TIME_PER_60DEG 0.18 // Time for 60° rotation (in seconds) from max speed (1.08s per 360)
 #define SERVO2_SPEED_TIME_PER_60DEG 0.18 // Time for 60° rotation (in seconds)
+
+//
+#define SERVO1_MAX_SPEED 1.15
 
 //
 //SERVOMOTOR     SERVOMOTOR     SERVOMOTOR     SERVOMOTOR
