@@ -22,7 +22,7 @@ public:
 
 private:
   float maxSpeed, accel;            //  must always positive
-  float speed;                      // Signed speed (can be positive or negative)
+  float speed, floatPos;            // Signed speed (can be positive or negative), floatPos stores the slowly (relative to delta time) increasing position
   int pos, desiredPos;              // Positions (signed integers)
   Servo servo;                      // Servo object
   uint8_t pin;                      // Servos pin

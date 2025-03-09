@@ -41,6 +41,7 @@ ServoMotor::ServoMotor(uint8_t pin) {
   maxSpeed = 0.0;
   speed = 0.0;
   accel = 0.0;
+  floatPos=0;
   pos = 0;
   desiredPos = 0;
 
@@ -51,25 +52,11 @@ ServoMotor::ServoMotor(uint8_t pin) {
 void ServoMotor::run() {
   // Acceleration logic: gradually adjust currentSpeed toward speed
   if((pin==SERVO1_PIN&&!SERVO1_IGNORE_MOVETO)||(pin==SERVO2_PIN&&!SERVO2_IGNORE_MOVETO)){
-    pos+=speed*TimeManager::getDeltaTime();
+    floatPos+=speed*TimeManager::getDeltaTime();
   }
+  pos=(int) floatPos;
   int8_t direction = (desiredPos > pos) - (desiredPos < pos); // Equivalent to (1, -1, or 0)
-  Serial.print("pos=");
-  Serial.print(pos);
-  Serial.print(" desiredPos=");
-  Serial.print(desiredPos);
-  Serial.print(" direction=");
-  Serial.print(direction);
-  Serial.print(" accel=");
-  Serial.print(accel);
-  Serial.print(" speed=");
-  Serial.print(speed);
-  Serial.print(" maxSpeed=");
-  Serial.print(maxSpeed);
-  Serial.print(" abs(Speed)=");
-  Serial.print(abs(speed));
-  Serial.print(" deadzone=");
-  Serial.println(SERVO2_SPEED_DEADZONE);
+  
 
 
   if (speed < maxSpeed * direction) {
@@ -85,7 +72,6 @@ void ServoMotor::run() {
     //or if speed will overlap pos then set pos to desired pos
     //accuracy doesnt matter a ton since its a servo motor and 
     //i dont have the time to do it right
-    Serial.println("yup");
     if(pos==desiredPos){
       speed=0;
     }else{
