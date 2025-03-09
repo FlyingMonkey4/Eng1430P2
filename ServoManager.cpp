@@ -34,14 +34,39 @@
 //
 
 ServoMotor::ServoMotor(uint8_t pin){
-  speed=0.0;accel=0.0;
+  speed=0.0;currentSpeed=0.0;accel=0.0;
   pos=0;desiredPos=0;
   
   servo.attach(pin);
 }
 
 void ServoMotor::run(){
-  //move towards desired position
+  // Acceleration logic: gradually adjust currentSpeed toward speed
+    if (currentSpeed < speed) {
+        currentSpeed += accel * TimeManager::getDeltaTime();
+        if (currentSpeed > speed) currentSpeed = speed; // Prevent overshooting
+    } 
+    else if (currentSpeed > speed) {
+        currentSpeed -= accel * TimeManager::getDeltaTime();
+        if (currentSpeed < speed) currentSpeed = speed; // Prevent overshooting
+    }
+
+    // Convert speed (degrees per second) to PWM value
+    int pwmValue = (currentSpeed * (0.18 / 60) * 500) + SERVO1_SPEED_STOP;
+
+    // Apply deadzone if enabled
+    if (SERVO1_DEADZONE_STATUS) {
+        if (pwmValue > SERVO1_SPEED_STOP - SERVO1_SPEED_DEADZONE &&
+            pwmValue < SERVO1_SPEED_STOP + SERVO1_SPEED_DEADZONE) {
+            pwmValue = SERVO1_SPEED_STOP;
+        }
+    }
+
+    // Ensure PWM stays within range
+    pwmValue = constrain(pwmValue, SERVO1_SPEED_MIN, SERVO1_SPEED_MAX);
+
+    // Write new speed to servo
+    servo.writeMicroseconds(pwmValue);
 }
 
 void ServoMotor::setMaxSpeed(float speed){
@@ -79,7 +104,7 @@ ServoManager::ServoManager(){
   if(SERVO1_STATUS){
     servos[0]=new ServoMotor(SERVO1_PIN);
 
-    servos[0]->setMaxSpeed(100.0);
+    servos[0]->setMaxSpeed(-360.0);
     servos[0]->setAcceleration(100.0);
     servos[0]->moveTo(24);
   }

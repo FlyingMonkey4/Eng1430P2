@@ -1,5 +1,6 @@
 #include "Stepper.h"
 #include "ServoManager.h"
+#include "TimeManager.h"
 
 void setup() {
   // put your setup code here, to run once:
@@ -13,6 +14,9 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  TimeManager::update();
+  
   StepperManager::getInstance()->run();
   ServoManager::getInstance()->run();
+
 }

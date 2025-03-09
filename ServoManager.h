@@ -1,6 +1,10 @@
+#pragma once
+
 #include <Arduino.h>
 
 #include <Servo.h>
+
+#include "TimeManager.h"
 
 struct ServoMotor{
 public:
@@ -16,7 +20,7 @@ public:
   void run();
 
 private:
-  float speed,accel;
+  float speed,currentSpeed,accel;
   int pos,desiredPos;
   Servo servo;
 };
