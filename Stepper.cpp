@@ -5,11 +5,11 @@ Adafruit_MotorShield AFMSbot(0x61);  // Rightmost jumper closed
 Adafruit_MotorShield AFMStop(0x60);  // Default address, no jumpers
 
 //SET TO TRUE OR FALSE TO ACTIVATE MOTOR PORT
-#define MOTOR1_STATUS true
+#define MOTOR1_STATUS false
 #define MOTOR2_STATUS false
 #define MOTOR3_STATUS false
 
-#define MOTOR1_STEPS_PER_REV 100
+#define MOTOR1_STEPS_PER_REV 200
 #define MOTOR2_STEPS_PER_REV 200
 #define MOTOR3_STEPS_PER_REV 200
 

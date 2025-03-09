@@ -11,18 +11,21 @@ public:
   ServoMotor(uint8_t pin);
 
   ///1.0 degree per second.
-  void setMaxSpeed(float speed);
+  void setMaxSpeed(float maxSpeed);
   void setAcceleration(float accel);
   void moveTo(int loc);
+  void setCurrentPosition(int newPos);
   int distanceToGo();
   int currentPosition();
 
   void run();
 
 private:
-  float speed,currentSpeed,accel;
-  int pos,desiredPos;
-  Servo servo;
+  float maxSpeed, accel;            //  must always positive
+  float speed;                      // Signed speed (can be positive or negative)
+  int pos, desiredPos;              // Positions (signed integers)
+  Servo servo;                      // Servo object
+  uint8_t pin;                      // Servos pin
 };
 
 
