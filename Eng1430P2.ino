@@ -11,9 +11,9 @@ void setup() {
   //Calls getInstance to make sure a manager is created
   StepperManager::getInstance();
   ServoManager::getInstance();
-  SoilSensor::setup();
-  ProxGestColSensor::setup();
-  TimeOfFlightSensor::setup();
+  // SoilSensor::setup();
+  // ProxGestColSensor::setup();
+  // TimeOfFlightSensor::setup();
 }
 
 void loop() {
