@@ -56,9 +56,9 @@ StepperManager::StepperManager() {
     motors[0] = AFMStop.getStepper(MOTOR1_STEPS_PER_REV, 1);
     motorWraps[0] = AccelStepper(StepperMotor::mf0, StepperMotor::mb0);
 
-    motorWraps[0].setMaxSpeed(100.0);
-    motorWraps[0].setAcceleration(100.0);
-    motorWraps[0].moveTo(24);
+    motorWraps[0].setMaxSpeed(250.0);
+    motorWraps[0].setSpeed(75);
+    // motorWraps[0].setAcceleration(100.0);
   }
   if (MOTOR2_STATUS) {
     motors[2] = AFMStop.getStepper(MOTOR2_STEPS_PER_REV, 2);
@@ -84,9 +84,6 @@ void StepperManager::run() {
 
   //MOTOR1 ACTIVITIES :D
   if (MOTOR1_STATUS) {
-    if (motorWraps[0].distanceToGo() == 0) {
-      motorWraps[0].moveTo(-motorWraps[0].currentPosition());
-    }
   }
 
   //MOTOR2 ACTIVITIES :D
@@ -97,8 +94,9 @@ void StepperManager::run() {
   }
 
 
-  if(MOTOR1_STATUS)
-    motorWraps[0].run();
+  if(MOTOR1_STATUS&&SoilSensor::toggleState)
+    motorWraps[0].runSpeed();
+    // motorWraps[0].run();
   if(MOTOR2_STATUS)
     motorWraps[1].run();
 }

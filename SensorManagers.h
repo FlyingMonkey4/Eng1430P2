@@ -13,6 +13,8 @@ namespace SoilSensor {
   extern float tempC;
   extern uint16_t capread;
 
+  extern bool toggleState;
+
   void setup();
   void run();
 }

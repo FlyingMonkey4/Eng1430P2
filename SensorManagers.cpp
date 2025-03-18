@@ -1,13 +1,18 @@
+#include "HardwareSerial.h"
 #include "SensorManagers.h"
 
 //updates onces every given amount of milliseconds
-#define SOIL_SENSOR_UPDATE_INTERVAL_MS 30000
+#define SOIL_SENSOR_UPDATE_INTERVAL_MS 50
+#define SOIL_SENSOR_THRESHOLD 500  // Adjust based on sensor values
 
 namespace SoilSensor {
   static Adafruit_seesaw sensor;
   static bool sensorInitialized = false;  // Track initialization status
   float tempC=0;
   uint16_t capread=0;
+
+  bool toggleState = false;  // Current state of the toggle
+  bool wasTouched = false;   // Tracks previous touch state 
 
   static unsigned long lastUpdateTime=0;
 
@@ -34,12 +39,14 @@ namespace SoilSensor {
         tempC = sensor.getTemp();
         capread = sensor.touchRead(0);
 
-        Serial.print("Temperature: ");
-        Serial.print(tempC);
-        Serial.println("°C");
-
-        Serial.print("Capacitive: ");
-        Serial.println(capread);
+        if (capread > SOIL_SENSOR_THRESHOLD && !wasTouched) {
+          toggleState = !toggleState;  // Toggle the state
+          wasTouched = true;  // Prevent rapid toggling
+        } 
+        // Detect when the touch is released
+        else if (capread < SOIL_SENSOR_THRESHOLD) {
+          wasTouched = false;
+        }
       }
     }
   }

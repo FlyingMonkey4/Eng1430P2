@@ -5,6 +5,8 @@
 #include <AccelStepper.h>
 #include <Adafruit_MotorShield.h>
 
+#include "SensorManagers.h"
+
 extern Adafruit_MotorShield AFMSbot; // Rightmost jumper closed
 extern Adafruit_MotorShield AFMStop; // Default address, no jumpers
 
