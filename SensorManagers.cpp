@@ -1,26 +1,31 @@
+#include "HardwareSerial.h"
 #include "SensorManagers.h"
 
 //updates onces every given amount of milliseconds
-#define SOIL_SENSOR_UPDATE_INTERVAL_MS 30000
+#define SOIL_SENSOR_UPDATE_INTERVAL_MS 50
+#define SOIL_SENSOR_THRESHOLD 500  // Adjust based on sensor values
 
 namespace SoilSensor {
-  Adafruit_seesaw* sensor = nullptr;
-  bool sensorInitialized = false;  // Track initialization status
+  static Adafruit_seesaw sensor;
+  static bool sensorInitialized = false;  // Track initialization status
   float tempC=0;
   uint16_t capread=0;
 
-  unsigned long lastUpdateTime=0;
+  bool toggleState = false;  // Current state of the toggle
+  bool wasTouched = false;   // Tracks previous touch state 
+
+  static unsigned long lastUpdateTime=0;
 
   void setup() {
 
-    sensor = new Adafruit_seesaw();
+    sensor = Adafruit_seesaw();
 
-    if (!sensor->begin(0x36)) {
+    if (!sensor.begin(0x36)) {
       Serial.println("ERROR! Soil sensor not found");
       sensorInitialized = false;  // Mark as not initialized
     } else {
       Serial.print("Seesaw started! Version: ");
-      Serial.println(sensor->getVersion(), HEX);
+      Serial.println(sensor.getVersion(), HEX);
       sensorInitialized = true;  // Mark as successfully initialized
     }
   }
@@ -31,15 +36,17 @@ namespace SoilSensor {
       if (currentMillis - lastUpdateTime >= SOIL_SENSOR_UPDATE_INTERVAL_MS) {  
         lastUpdateTime = currentMillis;  // Reset timer
         
-        tempC = sensor->getTemp();
-        capread = sensor->touchRead(0);
+        tempC = sensor.getTemp();
+        capread = sensor.touchRead(0);
 
-        Serial.print("Temperature: ");
-        Serial.print(tempC);
-        Serial.println("°C");
-
-        Serial.print("Capacitive: ");
-        Serial.println(capread);
+        if (capread > SOIL_SENSOR_THRESHOLD && !wasTouched) {
+          toggleState = !toggleState;  // Toggle the state
+          wasTouched = true;  // Prevent rapid toggling
+        } 
+        // Detect when the touch is released
+        else if (capread < SOIL_SENSOR_THRESHOLD) {
+          wasTouched = false;
+        }
       }
     }
   }
@@ -56,12 +63,12 @@ namespace SoilSensor {
 #define PROXGESTCOL_SENSOR_UPDATE_INTERVAL_MS 30000
 
 namespace ProxGestColSensor{
-  bool sensorInitialized = false;  // Track initialization status
+  static bool sensorInitialized = false;  // Track initialization status
 
   int proximity = 0;
   int r = 0, g = 0, b = 0;
   
-  unsigned long lastUpdateTime=0;
+  static unsigned long lastUpdateTime=0;
 
   
   void setup(){
@@ -83,7 +90,7 @@ namespace ProxGestColSensor{
           proximity = APDS.readProximity();
         }
 
-        // Check if a gesture reading is available
+        // // Check if a gesture reading is available
         if (APDS.gestureAvailable()&&GEST_STATUS) {
           int gesture = APDS.readGesture();
           switch (gesture) {
@@ -123,18 +130,18 @@ namespace ProxGestColSensor{
 #define FLIGHT_SENSOR_UPDATE_INTERVAL_MS 30000
 
 namespace TimeOfFlightSensor{
-  Adafruit_VL53L0X lox = Adafruit_VL53L0X();
+  static Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
-  bool sensorInitialized = false;  // Track initialization status
+  static bool sensorInitialized = false;  // Track initialization status
 
   VL53L0X_RangingMeasurementData_t measure;
 
-  unsigned long lastUpdateTime=0;
+  static unsigned long lastUpdateTime=0;
   
 
   void setup(){
     if (!lox.begin()) {
-      Serial.println(F("ERROR! Failed to boot VL53L0X"));
+      Serial.println("ERROR! Failed to boot VL53L0X");
     }else{
       sensorInitialized=true;
     }
